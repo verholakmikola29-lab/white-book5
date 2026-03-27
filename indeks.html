@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>White Book</title>
+<style>
+  /* 1. Основа та плавна прокрутка */
+  html { scroll-behavior: smooth; }
+  * { margin: 0; padding: 0; box-sizing: border-box; overflow-wrap: break-word; }
+
+  body {
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    line-height: 1.7;
+    color: #eee;
+    background-color: #111;
+  }
+
+  /* 2. ШТОРКА ЗВЕРХУ (Оригінал + Пошук) */
+  .top-bar {
+    position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+    background: rgba(17, 17, 17, 0.85);
+    backdrop-filter: blur(10px);
+    z-index: 998; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: background 0.3s;
+  }
+  .top-bar:hover { background: rgba(30, 30, 30, 0.95); }
+
+  .top-bar-title { font-size: 1.1em; font-weight: 600; color: #fff; opacity: 0.8; white-space: nowrap; }
+  
+  /* Поле пошуку */
+  .search-wrapper {
+    flex-grow: 1; max-width: 300px; margin: 0 20px;
+  }
+  #searchInput {
+    width: 100%; padding: 6px 15px; border-radius: 20px;
+    border: 1px solid #333; background: #222; color: #fff;
+    font-size: 0.9em; outline: none; transition: 0.3s;
+  }
+  #searchInput:focus { border-color: #555; background: #2a2a2a; }
+
+  .top-bar-info { font-size: 0.8em; color: #666; white-space: nowrap; }
+
+  /* 3. Виїзне меню (Sidebar) - Оригінал */
+  nav {
+    position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+    background-color: #1a1a1a; padding: 80px 15px 30px; overflow-y: auto;
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
+    box-shadow: 5px 0 20px rgba(0,0,0,0.5); border-right: 1px solid #333;
+  }
+  nav.active { left: 0; }
+  nav a {
+    display: block; color: #ccc; text-decoration: none; padding: 12px 15px;
+    margin-bottom: 5px; background-color: #222; border-radius: 6px; font-size: 0.9em; transition: 0.2s;
+  }
+  nav a:hover { background-color: #333; color: #fff; }
+
+  .overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); display: none; z-index: 999;
+  }
+  .overlay.active { display: block; }
+
+  /* 4. Контент */
+  main {
+    width: 100%; max-width: 800px; margin: 0 auto;
+    padding: 100px 20px 60px;
+  }
+
+  section { margin-bottom: 60px; scroll-margin-top: 80px; }
+  h2 { font-size: 2em; margin-bottom: 20px; color: #fff; line-height: 1.2; }
+  p { margin-bottom: 20px; text-align: left; color: #ccc; font-size: 1.1em; }
+  .category { font-size: 0.75em; text-transform: uppercase; color: #666; letter-spacing: 1px; margin-bottom: 8px; }
+
+  /* 5. Інструменти (Джерела та Копіювання) */
+  .footer-tools {
+    margin-top: 15px; border-left: 2px solid #444; padding-left: 15px;
+  }
+  .sources { font-size: 0.85em; color: #888; margin-bottom: 15px; }
+  .sources strong { color: #aaa; }
+  .sources a { color: #4da6ff; text-decoration: none; transition: 0.2s; border-bottom: 1px dotted #4da6ff; }
+  .sources a:hover { color: #80c1ff; border-bottom-color: #80c1ff; }
+  
+  .copy-btn {
+    background: #222; color: #ccc; border: 1px solid #444; padding: 6px 15px;
+    border-radius: 4px; cursor: pointer; font-size: 0.8em; text-transform: uppercase; transition: 0.2s;
+  }
+  .copy-btn:hover { background: #333; color: #fff; }
+
+  .hidden { display: none; }
+
+  @media (max-width: 600px) {
+    .top-bar-info { display: none; }
+    .search-wrapper { margin: 0 10px 0 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar" id="topBar">
+  <div class="top-bar-title">White Book</div>
+  <div class="search-wrapper">
+    <input type="text" id="searchInput" placeholder="Пошук фактів...">
+  </div>
+  <div class="top-bar-info">☰ МЕНЮ</div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<nav id="sidebar"></nav>
+
+<main id="content">
+
+  <section id="ch1">
+    <div class="category">Політичні ідеології</div>
+    <h2>01. Рашизм</h2>
+    <p>Державна ідеологія РФ, що є сучасною формою фашизму. Вона спирається на заперечення прав людини, імперський реваншизм, ліквідацію демократії та використання терору як головного інструменту політики.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://zakon.rada.gov.ua/laws/show/3023-20#Text" target="_blank">Постанова ВРУ №3023-IX (визнання рашизму)</a>, 
+        <a href="https://www.youtube.com/watch?v=kR2r-g7iV0o" target="_blank">Відеолекція Тімоті Снайдера</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch1')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch2">
+    <div class="category">Міжнародні конфлікти</div>
+    <h2>02. Конфлікт на сході України</h2>
+    <p>Не "громадянська війна", а пряма збройна агресія РФ з 2014 року. Кремль створив маріонеткові угруповання «ДНР/ЛНР», постачав їм важку зброю та використовував регулярні війська для вбивства українців (Іловайськ, Дебальцеве).</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://www.bellingcat.com/news/uk-and-europe/2014/11/08/origin-of-the-separatists-buk-a-bellingcat-investigation/" target="_blank">Розслідування Bellingcat щодо MH17</a>, 
+        <a href="https://www.echr.coe.int/w/grand-chamber-decisions-in-the-cases-concerning-eastern-ukraine" target="_blank">Рішення ЄСПЛ щодо Донбасу</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch2')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch3">
+    <div class="category">Міжнародне право</div>
+    <h2>03. Статус РФ в ООН</h2>
+    <p>РФ захопила місце постійного члена Радбезу ООН у 1991 році без жодної правової процедури, в обхід Статуту ООН. Це юридична фікція, яка дозволяє країні-терористу ветувати рішення, спрямовані проти неї.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://legal.un.org/repertory/art4.shtml" target="_blank">Статут ООН (Ст. 4 щодо прийому нових членів)</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch3')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch4">
+    <div class="category">Безпека</div>
+    <h2>04. Будапештський меморандум</h2>
+    <p>У 1994 році Україна здала 3-й у світі ядерний арсенал. Натомість отримала "гарантії", які Росія цинічно розтоптала у 2014-му. Цей документ довів: договори з РФ не варті паперу, на якому написані.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://zakon.rada.gov.ua/laws/show/998_158#Text" target="_blank">Текст Меморандуму на сайті ВРУ</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch4')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch5">
+    <div class="category">Медіа та пропаганда</div>
+    <h2>05. Інформаційна війна</h2>
+    <p>Пропаганда Кремля — це зброя масового ураження мізків. Фабрикація фейків, ботоферми та підміна понять використовуються для виправдання геноциду та розпалювання ненависті до українців.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://euvsdisinfo.eu/uk/" target="_blank">База даних російських фейків EUvsDisinfo</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch5')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch6">
+    <div class="category">Техногенні катастрофи</div>
+    <h2>06. Чорнобильська катастрофа</h2>
+    <p>Катастрофа 1986 року — це наслідок радянської системи брехні та халатності. Замість порятунку людей, влада СРСР приховувала аварію, виганяючи дітей на першотравневі паради під радіоактивним дощем.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://www.youtube.com/watch?v=s5E_0yS1BIs" target="_blank">Документальний фільм "Чорнобиль. Секретні матеріали"</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch6')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch7">
+    <div class="category">Визвольні змагання XX століття</div>
+    <h2>07. Українська Повстанська Армія (УПА)</h2>
+    <p>Армія без держави, що воювала проти двох найбільших тираній — нацистської та радянської. Їхньою метою була незалежна Україна. УПА вела збройний опір тоталітаризму аж до середини 1950-х років.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://cdvr.org.ua/" target="_blank">Центр досліджень визвольного руху</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch7')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch8">
+    <div class="category">Економіка та політика</div>
+    <h2>08. Економіка СРСР</h2>
+    <p>Система тотального дефіциту. Економіка працювала на виробництво танків та ракет, залишаючи громадян у бідності, з талонами на їжу та величезними чергами за базовими товарами.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch8')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch9">
+    <div class="category">Соціальна історія / Катастрофи</div>
+    <h2>09. Голодомор 1932–1933 років</h2>
+    <p>Навмисно спланований Сталіним акт геноциду. Села оточували військами, конфісковували всю їжу та прирікали мільйони українців на голодну смерть, щоб зламати опір колективізації.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://holodomormuseum.org.ua/" target="_blank">Національний музей Голодомору-геноциду</a>,
+        <a href="https://www.europarl.europa.eu/doceo/document/TA-9-2022-0449_UK.html" target="_blank">Резолюція Європарламенту</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch9')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch10">
+    <div class="category">Історія / Геополітика</div>
+    <h2>10. Кримська війна (1853–1856)</h2>
+    <p>Поразка, що викрила відсталість Росії. Облога Севастополя європейською коаліцією завершилася ганебною капітуляцією імперії та крахом її спроб домінувати у Чорному морі.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch10')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch11">
+    <div class="category">Гетьманщина / Дипломатія</div>
+    <h2>11. Іван Мазепа: Європейський вектор</h2>
+    <p>Спроба вирвати Україну з московського ярма. Союз зі Швецією був актом суверенної політики. За це Петро І втопив у крові столицю Батурин, вирізавши всіх мешканців, включно з немовлятами.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://uinp.gov.ua/istorychnyy-kalendar/lystopad/2-lystopada/1708-zakhoplennya-i-znyshchennya-baturyna-moskovskymy-viyskamy" target="_blank">УІНП: Знищення Батурина</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch11')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch12">
+    <div class="category">Давня історія / Літописи</div>
+    <h2>12. Перша згадка назви «Україна» (1187)</h2>
+    <p>У Київському літописі XII століття вже існувала «Україна». Це вщент руйнує міф російської пропаганди про те, що нашу країну "вигадали австрійці" чи "Ленін".</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch12')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch13">
+    <div class="category">Політична історія</div>
+    <h2>13. Розпад СРСР</h2>
+    <p>Закономірний кінець «в'язниці народів». Біловезька угода 1991 року лише юридично оформила смерть економічно та політично збанкрутілої тоталітарної імперії.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch13')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch14">
+    <div class="category">Політика / Короткочасні кризи</div>
+    <h2>14. Серпневий путч 1991 року</h2>
+    <p>Остання судома КДБ спробувати втримати владу силою. Провал путчистів продемонстрував, що народи більше не бояться радянської каральної машини.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch14')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch15">
+    <div class="category">Медіа / Пропаганда</div>
+    <h2>15. Інформаційні маніпуляції</h2>
+    <p>Від "розіп'ятих хлопчиків" до "бойових комарів". Росія довела мистецтво брехні до абсурду, стираючи межу між правдою та вимислом для зомбування власного населення.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch15')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch16">
+    <div class="category">Екологія / Соціальні наслідки</div>
+    <h2>16. Екологія індустріалізації</h2>
+    <p>Радянські заводи будували без думки про людей. Схід України перетворили на зону екологічного лиха заради виконання абсурдних п'ятирічних планів Москви.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch16')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch17">
+    <div class="category">Наука / Технології</div>
+    <h2>17. Технології СРСР</h2>
+    <p>Мілітарний космос на тлі злиднів. Уряд витрачав мільярди на ядерні боєголовки, поки звичайні громадяни десятиліттями чекали в черзі на отримання примітивного автомобіля чи пральної машини.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch17')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch18">
+    <div class="category">Культура / Історія</div>
+    <h2>18. Культурна спадщина</h2>
+    <p>Україна має глибоке європейське коріння: від Трипілля та Київської Русі до українського бароко. Це автентична культура, яку століттями намагалися вкрасти або знищити росіяни.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch18')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch19">
+    <div class="category">Середньовічна історія / Геополітика</div>
+    <h2>19. Золота Орда та Московія</h2>
+    <p>Державність РФ виросла на традиціях деспотії Золотої Орди. Абсолютна покора хану (царю) та знецінення людського життя — це їхня справжня історична спадщина, а не Київська Русь.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch19')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch20">
+    <div class="category">Державотворення / Політика</div>
+    <h2>20. Переяславська угода (1654)</h2>
+    <p>Тактичний військовий союз, який Москва підступно перетворила на анексію. Це історичний урок: будь-який договір із Росією є лише проміжним етапом до окупації.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch20')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch21">
+    <div class="category">Лінгвоцид / Російська імперія</div>
+    <h2>21. Емський указ (1876)</h2>
+    <p>Імперія намагалася вбити українську мову. Повна заборона на друк книг, вистави та навіть пісні українською. Це системний лінгвоцид, спрямований на знищення нації.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://uinp.gov.ua/istorychnyy-kalendar/traven/18-travnya/1876-pidpysano-emskyy-ukaz" target="_blank">УІНП: Емський указ</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch21')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch22">
+    <div class="category">Цензура / Політика</div>
+    <h2>22. Валуєвський циркуляр (1863)</h2>
+    <p>«Ніякої окремої малоросійської мови не було, немає і бути не може». Офіційний документ імперії, який на рівні закону забороняв українцям бути українцями.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch22')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch23">
+    <div class="category">Визвольний рух / 1920-ті</div>
+    <h2>23. Холодний Яр</h2>
+    <p>Безкомпромісний опір більшовикам. Коли політики здалися, звичайні селяни Черкащини підняли чорний прапор «Воля України або смерть» і роками громили окупантів.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://www.youtube.com/watch?v=M99b-4k_878" target="_blank">Відеоісторія Холодного Яру</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch23')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch24">
+    <div class="category">Права людини / СРСР</div>
+    <h2>24. Дисиденти</h2>
+    <p>Василь Стус, В'ячеслав Чорновіл та інші свідомо йшли в концтабори КДБ, щоб Україна мала голос. Їхня незламність стала фундаментом незалежності 1991 року.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch24')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch25">
+    <div class="category">Державність / 1991</div>
+    <h2>25. Акт незалежності</h2>
+    <p>Це не "подарунок", а результат століть боротьби. 1 грудня 1991 року понад 90% громадян на референдумі остаточно поховали Радянський Союз, обравши власну Державу.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://zakon.rada.gov.ua/laws/show/1427-12#Text" target="_blank">Акт проголошення незалежності</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch25')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch26">
+    <div class="category">Громадянське суспільство / 2004</div>
+    <h2>26. Помаранчева революція</h2>
+    <p>Бунт проти фальсифікацій та спроб Кремля призначити нам президента. Перший Майдан показав: джерелом влади в Україні є народ, а не російські політтехнологи.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch26')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch27">
+    <div class="category">Геополітика / 2013-2014</div>
+    <h2>27. Революція Гідності</h2>
+    <p>Нація повстала проти диктатури Януковича та розвороту в бік РФ. Ціною крові Небесної Сотні Україна остаточно вирвалася з орбіти "руского міра" і закріпила рух до ЄС.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch27')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch28">
+    <div class="category">Міжнародне право / Конфлікт</div>
+    <h2>28. Анексія Криму (2014)</h2>
+    <p>Безпрецедентний злочин у Європі XXI століття. Російські військові без розпізнавальних знаків захопили суверенну територію. "Референдум" був фікцією під дулами автоматів.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://undocs.org/en/A/RES/68/262" target="_blank">Резолюція ГА ООН 68/262 (Територіальна цілісність)</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch28')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch29">
+    <div class="category">Збройний конфлікт / Донбас</div>
+    <h2>29. Дипломатія Донбас</h2>
+    <p>Мінські угоди були пасткою. Росія ніколи не планувала досягати миру, а лише використовувала перемир'я для підготовки до повномасштабного знищення України.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch29')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch30">
+    <div class="category">Сучасність / Перспективи</div>
+    <h2>30. Розвиток України</h2>
+    <p>Попри жорстоку війну, країна впроваджує цифрові інновації («Дія»), проводить реформи та будує найбоєздатнішу армію на континенті, захищаючи східний фланг НАТО.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch30')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch31">
+    <div class="category">Історичні міфи / Пропаганда</div>
+    <h2>31. Міф «Один народ»</h2>
+    <p>Псевдоісторична маячня Путіна. Українці мають власну багатовікову мову, європейську культуру та традиції свободи. Ми різні народи з діаметрально протилежними цінностями.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch31')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch32">
+    <div class="category">Історія / Геополітика</div>
+    <h2>32. Крим — Україна</h2>
+    <p>Абсолютно законна передача Криму УРСР у 1954 році була зумовлена логістикою та економікою. Натомість депортація кримських татар Росією — це доведений злочин проти людяності.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch32')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch33">
+    <div class="category">Історичні міфи</div>
+    <h2>33. Міф Новоросія</h2>
+    <p>Імперський конструкт. Південь та Схід України завжди були територією запорозьких козаків. Росія просто перейменувала ці землі після того, як військовим шляхом знищила Січ.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch33')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch34">
+    <div class="category">Державотворення</div>
+    <h2>34. УНР 1917</h2>
+    <p>Понад 100 років тому Українська Народна Республіка вже проголосила незалежність, мала свій парламент, валюту і армію. Сучасна Україна — це відновлення тої держави, а не "витвір Леніна".</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch34')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch35">
+    <div class="category">Культура / Репресії</div>
+    <h2>35. Розстріляне відродження</h2>
+    <p>Фізичне винищення еліти. У 1930-х роках радянські спецслужби масово розстрілювали найкращих українських письменників, науковців та митців в урочищі Сандармох.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://uinp.gov.ua/istorychnyy-kalendar/lystopad/3-lystopada/1937-massovi-rozstrily-ukrayinskoyi-elity-v-sandarmosi" target="_blank">УІНП: Трагедія Сандармоху</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch35')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch36">
+    <div class="category">Визвольні змагання</div>
+    <h2>36. Друга світова</h2>
+    <p>Кривава м'ясорубка, де українці воювали проти Гітлера, водночас потерпаючи від репресій Сталіна. Україна зазнала найбільших втрат у Європі під час зіткнення двох диктатур.</p>
+    <div class="footer-tools">
+      <button class="copy-btn" onclick="copySection('ch36')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch37">
+    <div class="category">Сучасна Україна</div>
+    <h2>37. Декомунізація</h2>
+    <p>Скидання ідолів тоталітаризму. Неможливо будувати вільне майбутнє на вулицях, названих іменами катів (Леніна, Сталіна, Дзержинського), які вбивали українців.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://zakon.rada.gov.ua/laws/show/317-19#Text" target="_blank">Закон про засудження комуністичного режиму</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch37')">Копіювати розділ</button>
+    </div>
+  </section>
+
+  <section id="ch38">
+    <div class="category">Сучасність / Агресія</div>
+    <h2>38. Вторгнення 2022</h2>
+    <p>24 лютого 2022 року РФ розпочала війну на знищення нації. Буча, Маріуполь, Ізюм — це докази відкритого геноциду. ЗСУ та весь народ ведуть священну битву за виживання та свободу.</p>
+    <div class="footer-tools">
+      <div class="sources">
+        <strong>Джерела:</strong> 
+        <a href="https://www.icc-cpi.int/situations/ukraine" target="_blank">Міжнародний кримінальний суд (Ордери на арешт)</a>, 
+        <a href="https://ukraine.un.org/uk/224285-bucha" target="_blank">Звіти ООН щодо воєнних злочинів</a>
+      </div>
+      <button class="copy-btn" onclick="copySection('ch38')">Копіювати розділ</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const titles = [
+    "Рашизм", "Конфлікт", "Статус РФ", "Будапештський меморандум", "Інформаційна війна", 
+    "Чорнобильська катастрофа", "УПА", "Економіка СРСР", "Голодомор", "Кримська війна", 
+    "Іван Мазепа", "Перша згадка Україна", "Розпад СРСР", "Серпневий путч", "Маніпуляції", 
+    "Екологія індустріалізації", "Технології СРСР", "Культурна спадщина", "Золота Орда", 
+    "Переяславська угода", "Емський указ", "Валуєвський циркуляр", "Холодний Яр", "Дисиденти", 
+    "Акт незалежності", "Помаранчева революція", "Революція Гідності", "Анексія Криму", 
+    "Дипломатія Донбас", "Розвиток України", "Міф Один народ", "Крим — Україна", "Міф Новоросія", 
+    "УНР 1917", "Відродження", "Друга світова", "Декомунізація", "Вторгнення 2022"
+  ];
+  
+  const nav = document.getElementById('sidebar');
+  const sections = document.querySelectorAll('main section');
+  const topBar = document.getElementById('topBar');
+  const overlay = document.getElementById('overlay');
+  const searchInput = document.getElementById('searchInput');
+
+  // Генерація меню
+  titles.forEach((t, i) => {
+    nav.innerHTML += `<a href="#ch${i+1}">${(i+1).toString().padStart(2, '0')}. ${t}</a>`;
+  });
+
+  // Логіка відкриття/закриття меню
+  function toggleMenu() {
+    nav.classList.toggle('active');
+    overlay.classList.toggle('active');
+  }
+
+  // Відкривати меню по кліку на шторку, АЛЕ ігнорувати клік по полю пошуку
+  topBar.addEventListener('click', (e) => {
+    if(e.target.id !== 'searchInput') {
+      toggleMenu();
+    }
+  });
+  
+  overlay.addEventListener('click', toggleMenu);
+  
+  nav.addEventListener('click', (e) => {
+    if (e.target.tagName === 'A') toggleMenu();
+  });
+
+  // Логіка розумного пошуку
+  searchInput.addEventListener('input', (e) => {
+    const val = e.target.value.toLowerCase();
+    sections.forEach(s => {
+      const match = s.innerText.toLowerCase().includes(val);
+      s.classList.toggle('hidden', !match);
+    });
+  });
+
+  // Логіка кнопки "Копіювати"
+  function copySection(id) {
+    const sec = document.getElementById(id);
+    const title = sec.querySelector('h2').innerText;
+    const body = sec.querySelector('p').innerText;
+    
+    // Беремо текст джерел без HTML-тегів, але з посиланнями якщо треба
+    let sourcesText = "";
+    const sourcesDiv = sec.querySelector('.sources');
+    if(sourcesDiv) {
+      sourcesText = "\n\n" + sourcesDiv.innerText;
+    }
+
+    const fullText = `${title}\n\n${body}${sourcesText}`;
+    
+    navigator.clipboard.writeText(fullText).then(() => {
+      const btn = sec.querySelector(`#${id} .copy-btn`);
+      const originalText = btn.innerText;
+      btn.innerText = 'Скопійовано!';
+      btn.style.borderColor = '#4da6ff';
+      btn.style.color = '#fff';
+      setTimeout(() => {
+        btn.innerText = originalText;
+        btn.style.borderColor = '#444';
+        btn.style.color = '#ccc';
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html
